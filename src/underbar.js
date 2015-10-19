@@ -51,13 +51,11 @@
   // Note: _.each does not have a return value, but rather simply runs the
   // iterator function over each item in the input collection.
   _.each = function(collection, iterator) {
-    if (collection.constructor === Array) {
+    if (Array.isArray(collection)) {
       for (var i = 0; i < collection.length; i++) {
-        var index = i;
-        iterator(collection[i], index, collection);
+        iterator(collection[i], i, collection);
       }
-    }
-    if (collection.constructor === Object) {
+    } else {
       for (var key in collection) {
         iterator(collection[key], key, collection);
       }
