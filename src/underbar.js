@@ -164,7 +164,7 @@
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
-    var init = accumulator = arguments.length === 2;
+    var init = arguments.length === 2;
     _.each(collection, function(item) {
       if (init) {
         accumulator = item;
@@ -180,11 +180,12 @@
   _.contains = function(collection, target) {
     // TIP: Many iteration problems can be most easily expressed in
     // terms of reduce(). Here's a freebie to demonstrate!
-    return _.reduce(collection, function(wasFound, item) {
-      if (wasFound) {
+    return _.reduce(collection, function(accum, item) {
+      if (accum) {
         return true;
-      }
+      } else {
       return item === target;
+      }
     }, false);
   };
 
@@ -192,12 +193,25 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    if (iterator === undefined) {
+      iterator = _.identity;
+    }
+    iterator = iterator || _.identity
+    return _.reduce(collection, function(accum, item) {
+      return accum && Boolean(iterator(item));
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    if (iterator === undefined) {
+      iterator = _.identity;
+    }
+    return _.reduce(collection, function(accum, item) {
+      return accum || Boolean(iterator(item));
+    }, false);
   };
 
 
@@ -220,11 +234,27 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    _.each(arguments, function(argObj) {
+      _.each(argObj, function(val, key) {
+        obj[key] = val;
+      });
+    });
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each(arguments, function(argObj) {
+      _.each(argObj, function(val, key) {
+    // If this key-value pair doesn't yet exist, add it to obj.
+    // If it alrdy DOES exist, the key-value pair won't be added.
+        if (obj[key] === undefined) {
+          obj[key] = val;
+        }
+      });
+    });
+    return obj;
   };
 
 
@@ -268,6 +298,24 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    // create an obj to store the funcs and their returns values
+    var obj = {};
+    return function() {
+      // turn func's arguments into a string
+      // inner function has access to func's arguments keyword, but NOT memoize's
+      var arg = arguments[0].toString();
+      // if the function alrdy exists in obj, return the result
+      // dont't need to re-run func here
+      for (var key in obj) {
+        if (key === arg) {
+          return obj[key];
+        }
+      }
+      // if the key-value pair (function / return value) hasn't been created in obj yet,
+      // then run func, store the value in obj, and return the value
+      obj[arg] = func.apply(this, arguments);
+      return obj[arg];
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -277,8 +325,11 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    // args is an actual array now, containing the arguments
+    // that were sliced starting at delay's index#2
+    var args = Array.prototype.slice.call(arguments, 2);
+    setTimeout(function() { return func.apply(this, args); }, wait);
   };
-
 
   /**
    * ADVANCED COLLECTION OPERATIONS
@@ -290,7 +341,18 @@
   // TIP: This function's test suite will ask that you not modify the original
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
-  _.shuffle = function(array) {
+  _.shuffle = function(arr) {
+    var arrCopy = arr.slice();
+    var shuffledArr = [];
+
+    for (var i = 0; i < arr.length; i++) {
+      var random = Math.floor(Math.random() * arrCopy.length);
+      shuffledArr.push(arrCopy[random]);
+      arrCopy.splice(random, 1);
+    }
+
+    return shuffledArr;
+
   };
 
 
